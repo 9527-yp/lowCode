@@ -37,7 +37,7 @@ export default defineComponent({
         });
 
         // 实现组件拖拽
-        let { mousedown } = useBlockDragger(focusData)
+        let { mousedown } = useBlockDragger(focusData, lastSeleteBlock)
     
 
         return () => <div class="editor">
