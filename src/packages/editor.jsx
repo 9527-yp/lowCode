@@ -1,4 +1,7 @@
 import { defineComponent, h, computed, inject, ref } from "vue";
+
+import { Plus, Delete } from '@element-plus/icons-vue'
+
 import EditorBlock from './editor-block.jsx';
 import "./editor.scss";
 import deepcopy from "deepcopy";
@@ -37,9 +40,21 @@ export default defineComponent({
         });
 
         // 实现组件拖拽
-        let { mousedown } = useBlockDragger(focusData, lastSeleteBlock)
+        let { mousedown, markLine } = useBlockDragger(focusData, lastSeleteBlock, data)
     
 
+        const buttons = [
+            {
+                label: '撤销',
+                icon: <Plus />,
+                handler: () => console.log('撤销')
+            },
+            {
+                label: '重做',
+                icon: <Delete />,
+                handler: () => console.log('重做')
+            },
+        ]
         return () => <div class="editor">
             <div class="editor-left">
                 {/* 根据注册列表渲染内容 可以实现h5的拖拽*/}
@@ -57,7 +72,17 @@ export default defineComponent({
                     })
                 }
             </div>
-            <div class="editor-top">菜单栏</div>
+            <div class="editor-top">
+                {buttons.map((btn) => {
+                    const icon = typeof btn.icon === 'function' ? btn.icon() : btn.icon
+                    const label = typeof btn.label === 'function' ? btn.label() : btn.label
+                    return <div onClick={btn.handler} className="editor-top-button">
+                        {icon}
+                        {/* <el-icon class="item-del"><Delete /></el-icon> */}
+                        <span>{label}</span>
+                    </div>
+                })}
+            </div>
             <div class="editor-right">属性控制栏目</div>
             <div class="editor-container">
                 {/* 负责产生滚动条 */}
@@ -80,6 +105,8 @@ export default defineComponent({
                                 )
                             )
                         }
+                        {markLine.x !== null && <div class="line-x" style={{left: markLine.x + 'px'}}></div>}
+                        {markLine.y !== null && <div class="line-y" style={{top: markLine.y + 'px'}}></div>}
                     </div>
                 </div>
             </div>
