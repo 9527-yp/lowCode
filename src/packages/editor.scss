@@ -52,7 +52,28 @@
         left: 280px;
         right: 280px;
         height: 80px;
-        background: blue;
+        // background: blue;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &-button{
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: rgba(0,0,0, .3);
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+            &+&{
+                margin-left: 5px;
+            }
+            &-icon{
+                width: 21px;
+            }
+        }
     }
     &-container{
         padding: 80px 270px 0;

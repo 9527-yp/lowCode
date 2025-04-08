@@ -8,6 +8,7 @@ import deepcopy from "deepcopy";
 import { useMenuDragger } from './useMenuDragger.js';
 import { useFocus } from './useFocus.js';
 import { useBlockDragger } from "./useBlockDragger.js";
+import { useCommand } from './useCommand.js';
 
 
 export default defineComponent({
@@ -43,18 +44,21 @@ export default defineComponent({
         let { mousedown, markLine } = useBlockDragger(focusData, lastSeleteBlock, data)
     
 
+        const { commands } = useCommand(data);
         const buttons = [
             {
                 label: '撤销',
                 icon: <Plus />,
-                handler: () => console.log('撤销')
+                handler: () => commands.undo()
             },
             {
                 label: '重做',
                 icon: <Delete />,
-                handler: () => console.log('重做')
+                handler: () => commands.redo()
             },
         ]
+
+
         return () => <div class="editor">
             <div class="editor-left">
                 {/* 根据注册列表渲染内容 可以实现h5的拖拽*/}
@@ -76,9 +80,8 @@ export default defineComponent({
                 {buttons.map((btn) => {
                     const icon = typeof btn.icon === 'function' ? btn.icon() : btn.icon
                     const label = typeof btn.label === 'function' ? btn.label() : btn.label
-                    return <div onClick={btn.handler} className="editor-top-button">
-                        {icon}
-                        {/* <el-icon class="item-del"><Delete /></el-icon> */}
+                    return <div onClick={btn.handler} class="editor-top-button">
+                        <el-icon class="editor-top-button-icon">{icon}</el-icon>
                         <span>{label}</span>
                     </div>
                 })}

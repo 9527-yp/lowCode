@@ -11,6 +11,7 @@
   "dependencies": {
     "deepcopy": "^2.1.0",
     "element-plus": "^2.9.7",
+    "mitt": "^3.0.1",
     "vue": "^3.5.13"
   },
   "devDependencies": {
