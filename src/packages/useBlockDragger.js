@@ -79,7 +79,7 @@ export function useBlockDragger(focusData, lastSeleteBlock, data) {
             startLeft: lastSeleteBlock.value.left, // B盒子拖拽前的位置 left和top
             startTop: lastSeleteBlock.value.top,
             dragging: false,
-            focusPos: focusData.value.focus.map(({top, left}) => ({top, left})), // 记录每一个选中的位置
+            focusPos: focusData.value.focus.map(({top, left}) => ({top, left})), // 记录每一个选中的位置  
             lines: (() => {
                 const {unFocused} = focusData.value; // 获取其他没选中的以他们的位置做辅助线
 
