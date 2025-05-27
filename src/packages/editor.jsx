@@ -1,10 +1,11 @@
 import { defineComponent, h, computed, inject, ref } from "vue";
 
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { ArrowLeft, ArrowRight, Upload, Download } from '@element-plus/icons-vue'
 
 import EditorBlock from './editor-block.jsx';
 import "./editor.scss";
 import deepcopy from "deepcopy";
+import { $dialog } from "../components/Dialog.jsx";
 import { useMenuDragger } from './useMenuDragger.js';
 import { useFocus } from './useFocus.js';
 import { useBlockDragger } from "./useBlockDragger.js";
@@ -48,13 +49,29 @@ export default defineComponent({
         const buttons = [
             {
                 label: '撤销',
-                icon: <Plus />,
+                icon: <ArrowLeft />,
                 handler: () => commands.undo()
             },
             {
                 label: '重做',
-                icon: <Delete />,
+                icon: <ArrowRight />,
                 handler: () => commands.redo()
+            },
+            {
+                label: '导出',
+                icon: <Download />,
+                handler: () => {
+                    $dialog({
+                        title: '',
+                        content: '',
+                        footer: true,
+                    })
+                }
+            },
+            {
+                label: '导入',
+                icon: <Upload />,
+                handler: () => console.log('导入')
             },
         ]
 

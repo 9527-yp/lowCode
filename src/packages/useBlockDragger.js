@@ -1,4 +1,5 @@
 import { reactive } from "vue";
+import { events } from "./events";
 
 export function useBlockDragger(focusData, lastSeleteBlock, data) {
     let dragState = {
@@ -14,6 +15,11 @@ export function useBlockDragger(focusData, lastSeleteBlock, data) {
     const mousemove = (e) => {
         // 获取鼠标移动后的位置
         let { clientX: moveX, clientY: moveY } = e;
+
+        if(!dragState.dragging) {
+            dragState.dragging = true;
+            events.emit('start'); // 触发事件就会记住拖拽前的位置
+        }
 
         // 计算当前元素最新的left和top，去线里面找，找到后显示线
         // 如何计算：鼠标移动后 - 鼠标移动前 + 盒子的left
@@ -66,6 +72,10 @@ export function useBlockDragger(focusData, lastSeleteBlock, data) {
 
         markLine.x = null;
         markLine.y = null;
+
+        if(dragState.dragging) { // 如果只是点击就不会触发
+            events.emit('end');
+        }
     }
     const mousedown = (e) => {
 

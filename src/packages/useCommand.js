@@ -104,8 +104,42 @@ export function useCommand(data) {
         }
     });
 
+    const keyboardEvent = (() => {
+        const keyCodes = {
+            90: 'z',
+            89: 'y',
+        }
+
+        const onKeydown = (e) => {
+            const { ctrlKey, keyCode }  = e;
+            let keyString = [];
+            if(ctrlKey) keyString.push('ctrl');
+            keyString.push(keyCodes[keyCode]);
+            keyString = keyString.join('+');
+
+            state.commandArray.forEach(({keyboard, name}) => {
+                if(!keyboard) return; // 没有键盘事件
+                if(keyboard === keyString){
+                    state.commands[name]();
+                    e.preventDefault();
+                }
+            })
+        }
+        const init = () => { // 初始化事件
+            window.addEventListener('keydown', onKeydown)
+
+            return () => { // 销毁事件
+                window.removeEventListener('keydown', onKeydown)
+            }
+        }
+
+        return init
+    })()
 
     ;(()=> {
+        // 监听键盘事件
+        state.destroyArray.push(keyboardEvent())
+
         state.commandArray.forEach(command => command.init && state.destroyArray.push(command.init()))
     })()
 
