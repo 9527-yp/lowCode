@@ -112,6 +112,13 @@
     }
 }
 
+.editor-block-preview{
+    &::after{
+        content: '';
+        display: none;
+    }
+}
+
 // 移动的是left值
 .line-x{
     position: absolute;

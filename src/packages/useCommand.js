@@ -2,7 +2,7 @@ import deepcopy from "deepcopy";
 import { onUnmounted } from "vue";
 import { events } from './events.js'
 
-export function useCommand(data) {
+export function useCommand(data, focusData) {
     const state = { // 前进后退需要指针
         current: -1, // 前进后退的索引值
         queue: [], // 存放所有的操作命令
@@ -13,9 +13,9 @@ export function useCommand(data) {
 
     const registry = (command) => {
         state.commandArray.push(command);
-        state.commands[command.name] = () => {
+        state.commands[command.name] = (...args) => {
             // 命令名字对应执行函数
-            const { redo, undo } = command.execute();
+            const { redo, undo } = command.execute(...args);
             redo();
             if(!command.pushQueue){
                 // 不需要放到队列中直接跳过即可
@@ -66,6 +66,115 @@ export function useCommand(data) {
                         item.undo && item.undo();
                         state.current--;
                     }
+                }
+            }
+        }
+    })
+
+    registry({
+        name: 'updateContainer',  // 导入更新整个容器
+        pushQueue: true,
+        execute(newValue) {
+            let state = {
+                before: data.value, // 旧的值
+                after: newValue // 新的值
+            }
+            return {
+                redo() {
+                    // 默认一松手 就直接把当前事情做了
+                    data.value = state.after
+                },
+                undo() {
+                    // 前一步的
+                    data.value = state.before
+                }
+            }
+        }
+    })
+
+    registry({
+        name: 'delete',  // 删除操作
+        pushQueue: true,
+        execute() {
+            let state = {
+                before: data.value.blocks, // 旧的值
+                after: focusData.value.unFocused // 新的值
+            }
+            return {
+                redo() {
+                    // 默认一松手 就直接把当前事情做了
+                    data.value = {...data.value, blocks: state.after}
+                },
+                undo() {
+                    // 前一步的
+                    data.value = {...data.value, blocks: state.before}
+                }
+            }
+        }
+    })
+
+    registry({
+        name: 'placeTop', // 置顶操作
+        pushQueue: true,
+        execute() {
+            let before = deepcopy(data.value.blocks);
+            let after = (() => {  // 置顶就是在所有的block中找到最大的
+                let { focus, unFocused } = focusData.value;
+
+                let maxZIndex = unFocused.reduce((prev, block) => {
+                    return Math.max(prev, block.zIndex)
+                }, -Infinity)
+
+                focus.forEach(block => block.zIndex = maxZIndex + 1); // 让当前选中的比最大值+1
+
+                return data.value.blocks
+            })()
+
+            return {
+                redo() {
+                    // 默认一松手 就直接把当前事情做了
+                    data.value = {...data.value, blocks: after}
+                },
+                undo() {
+                    // 前一步的
+                    data.value = {...data.value, blocks: before}
+                }
+            }
+        }
+    })
+
+    registry({
+        name: 'placeBottom', // 置底操作
+        pushQueue: true,
+        execute() {
+            let before = deepcopy(data.value.blocks);
+            let after = (() => {  // 置顶就是在所有的block中找到最大的
+                let { focus, unFocused } = focusData.value;
+
+                let minZIndex = unFocused.reduce((prev, block) => {
+                    return Math.min(prev, block.zIndex)
+                }, Infinity) - 1
+
+                // 不能直接 - 1，因为zindex不能出现负值，会在页面底部
+                if(minZIndex < 0) { // 这里如果是负值，则让没选中的向上，自己变成0
+                    const dur = Math.abs(minZIndex);
+                    minZIndex = 0;
+                    unFocused.forEach(block => block.zIndex += dur)
+                }
+
+                focus.forEach(block => block.zIndex = minZIndex);
+
+                return data.value.blocks
+            })()
+
+            return {
+                redo() {
+                    // 默认一松手 就直接把当前事情做了
+                    data.value = {...data.value, blocks: after}
+                },
+                undo() {
+                    // 前一步的
+                    data.value = {...data.value, blocks: before}
                 }
             }
         }

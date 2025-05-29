@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 
 
-export function useFocus(data, callback) {
+export function useFocus(data, previewRef, callback) {
     const focusData = computed(() => {
         let focus = [];
         let unFocused = [];
@@ -23,11 +23,13 @@ export function useFocus(data, callback) {
 
     // 3, 实现拖拽多个元素功能
     const containerMousedown = () => {
+        if(previewRef.value) return ;
         // 点击容器让选中的失去焦点
         selectIndex.value = -1;
         clearBlockFocus();
     }
     const blockMousedown = (e, block, index) => {
+        if(previewRef.value) return ;
         e.preventDefault();
         e.stopPropagation();
         if(e.shiftKey) {
@@ -54,6 +56,7 @@ export function useFocus(data, callback) {
         focusData,
         lastSeleteBlock,
         blockMousedown,
-        containerMousedown
+        containerMousedown,
+        clearBlockFocus
     }
 }

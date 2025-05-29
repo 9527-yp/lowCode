@@ -1,6 +1,6 @@
 import { defineComponent, h, computed, inject, ref } from "vue";
 
-import { ArrowLeft, ArrowRight, Upload, Download } from '@element-plus/icons-vue'
+import { ArrowLeft, ArrowRight, Upload, Download, Top, Bottom, Delete, View, Edit, Close } from '@element-plus/icons-vue'
 
 import EditorBlock from './editor-block.jsx';
 import "./editor.scss";
@@ -18,6 +18,10 @@ export default defineComponent({
     },
     emits: ['update:state'],
     setup(props, ctx){
+        // 预览的时候，内容不能再操作了，可以点击输入内容，方便看效果
+        const previewRef = ref(false);
+        const editorRef = ref(true);
+
         const data = computed({
             get: () => props.state,
             set: (newValue) => ctx.emit("update:state", deepcopy(newValue))
@@ -36,7 +40,7 @@ export default defineComponent({
         const { dragstart, dragend } = useMenuDragger(containerRef, data);
 
         // 2, 实现获取焦点，选中后可能直接就进行拖拽了
-        const { focusData, lastSeleteBlock, blockMousedown, containerMousedown } = useFocus(data, (e) => {
+        const { focusData, lastSeleteBlock, blockMousedown, containerMousedown, clearBlockFocus } = useFocus(data, previewRef, (e) => {
             // 获取焦点后进行拖拽
             mousedown(e)
         });
@@ -45,7 +49,7 @@ export default defineComponent({
         let { mousedown, markLine } = useBlockDragger(focusData, lastSeleteBlock, data)
     
 
-        const { commands } = useCommand(data);
+        const { commands } = useCommand(data, focusData);
         const buttons = [
             {
                 label: '撤销',
@@ -62,18 +66,63 @@ export default defineComponent({
                 icon: <Download />,
                 handler: () => {
                     $dialog({
-                        title: '',
-                        content: '',
-                        footer: true,
+                        title: '导出JSON数据',
+                        content: JSON.stringify(data.value),
+                        footer: false,
                     })
                 }
             },
             {
                 label: '导入',
                 icon: <Upload />,
-                handler: () => console.log('导入')
+                handler: () => {
+                    $dialog({
+                        title: '导入JSON数据',
+                        content: '',
+                        footer: true,
+                        onConfirm(text){
+
+                            commands.updateContainer(JSON.parse(text))
+                        }
+                    })
+                }
+            },
+            {
+                label: '置顶',
+                icon: <Top />,
+                handler: () => commands.placeTop()
+            },
+            {
+                label: '置底',
+                icon: <Bottom />,
+                handler: () => commands.placeBottom()
+            },
+            {
+                label: '删除',
+                icon: <Delete />,
+                handler: () => commands.delete()
+            },
+            {
+                label: previewRef.value ? '编辑' : '预览',
+                icon: previewRef.value ? <Edit/> : <View/>,
+                handler: () => {
+                    previewRef.value = !previewRef.value
+                    clearBlockFocus();
+                }
+            },
+            {
+                label: '关闭',
+                icon: <Close/>,
+                handler: () => {
+                    editorRef.value = false
+                    clearBlockFocus();
+                }
             },
         ]
+
+        const onContextMenuBlock = (e, block) => {
+            e.preventDefault(); // 关闭默认事件
+        }
 
 
         return () => <div class="editor">
@@ -118,9 +167,10 @@ export default defineComponent({
                             (
                                 data.value.blocks.map((block, index) => 
                                     <EditorBlock
-                                     class={block.focus ? 'editor-block-focus' : ''}
+                                     class={[block.focus ? 'editor-block-focus' : '', previewRef.value ? 'editor-block-preview' : '']}
                                      block={block} 
-                                     onMousedown={(e) => blockMousedown(e, block, index)} 
+                                     onMousedown={(e) => blockMousedown(e, block, index)}
+                                     onContextmenu = {(e) => onContextMenuBlock(e, block)}
                                     ></EditorBlock>
                                 )
                             )

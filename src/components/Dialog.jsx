@@ -18,24 +18,37 @@ const DialogComponent = defineComponent({
                 state.isShow = true;
             }
         })
+
+        const onCancel = () => {
+            state.isShow = false;
+        }
+
+        const onConfirm = () => {
+            state.isShow = false;
+            state.option.onConfirm && state.option.onConfirm(state.option.content)
+        }
         return () => {
-
-
-            return <ElDialog title={'测试'} v-model={state.isShow}>
-                {{
-                    default: () => <ElInput type="textarea" v-model={state.option.content} rows="10"></ElInput>,
-                    footer: () => state.option.footer && <div>
-                        <ElButton onClick={() =>{}}>取消</ElButton>
-                        <ElButton type="primary" onClick={() =>{}}>确定</ElButton>
-                    </div>
-                }}
-            </ElDialog>
+            return h(ElDialog, {
+                title: state.option.title,
+                modelValue: state.isShow,
+                beforeClose: onCancel
+            }, {
+                default: () => h(ElInput, {
+                    type: "textarea",
+                    modelValue: state.option.content,
+                    rows: 10,
+                    'onUpdate:modelValue': (val) => state.option.content = val
+                }),
+                footer: () => state.option.footer && h('div', [
+                    h(ElButton, { onClick: onCancel }, '取消'),
+                    h(ElButton, { type: 'primary', onClick: onConfirm }, '确定')
+                ])
+            })
         }
     }
 })
 let vm;
 export function $dialog(option) {
-
     if(!vm){ // 节点存在就不用再创建节点
         let el = document.createElement('div');
         vm = createVNode(DialogComponent, {option}) // 将组件渲染成虚拟节点
